@@ -1,0 +1,45 @@
+name: Mise à jour hebdomadaire des pages SEO
+
+on:
+  schedule:
+    - cron: "17 4 * * 1"   # chaque lundi vers 5 h 17 (heure de Paris en hiver)
+  workflow_dispatch: {}     # bouton « Run workflow » pour lancer à la main
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  construire:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Générer les pages depuis Airtable
+        env:
+          AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python build.py
+      - name: Enregistrer les textes rédigés par Claude
+        run: |
+          git config user.name "mise-a-jour-auto"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/textes.json
+          git diff --cached --quiet || git commit -m "Textes des pages mis à jour"
+          git push
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploiement
+        uses: actions/deploy-pages@v4
