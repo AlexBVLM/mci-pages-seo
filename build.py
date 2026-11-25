@@ -309,13 +309,18 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
 
 e = html.escape
 
+# Mesure d'audience Plausible (sans cookies), même compte que le site Softr.
+PLAUSIBLE = ('<script async src="https://plausible.io/js/pa-BB7h2oE-Lb27wc9X9KLgw.js"></script>'
+             '<script>window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},'
+             'plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init()</script>')
+
 
 def gabarit(titre, description, chemin, corps, jsonld=None):
     ld = f'<script type="application/ld+json">{json.dumps(jsonld, ensure_ascii=False)}</script>' if jsonld else ""
     return f"""<!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{e(titre)}</title><meta name="description" content="{e(description)}">
-<link rel="canonical" href="{BASE_URL}{chemin}"><style>{CSS}</style>{ld}</head>
+<link rel="canonical" href="{BASE_URL}{chemin}"><style>{CSS}</style>{ld}{PLAUSIBLE}</head>
 <body><header><a href="{SITE_MCI}">Mon Consultant Indépendant</a></header><main>{corps}</main>
 <footer>Mon Consultant Indépendant · chiffres calculés sur les missions publiées sur la plateforme · <a href="{BASE_URL}/">Tous les TJM freelance</a></footer>
 </body></html>"""
