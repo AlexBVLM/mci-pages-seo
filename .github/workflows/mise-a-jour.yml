@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: "17 4 * * 1"   # chaque lundi vers 5 h 17 (heure de Paris en hiver)
   workflow_dispatch: {}     # bouton « Run workflow » pour lancer à la main
+  push:
+    branches: [main]
+    paths: ["build.py", ".github/workflows/**"]
 
 permissions:
   contents: write
