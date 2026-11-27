@@ -1,0 +1,46 @@
+name: Article hebdomadaire (page Articles MCI)
+
+on:
+  schedule:
+    - cron: "13 7 * * 2"   # chaque mardi vers 8 h 13 (heure de Paris en hiver)
+  workflow_dispatch: {}     # bouton « Run workflow » pour lancer à la main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: article
+  cancel-in-progress: false
+
+jobs:
+  article:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pillow
+      - name: Rédiger l'article et son image
+        env:
+          AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
+          AIRTABLE_TOKEN_ARTICLES: ${{ secrets.AIRTABLE_TOKEN_ARTICLES }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python articles.py rediger
+      - name: Mettre l'image en ligne
+        run: |
+          git config user.name "article-auto"
+          git config user.email "actions@users.noreply.github.com"
+          git add images data/article_en_attente.json
+          git commit -m "Article de la semaine : image"
+          git push
+          sleep 30
+      - name: Publier sur la page Articles
+        env:
+          AIRTABLE_TOKEN_ARTICLES: ${{ secrets.AIRTABLE_TOKEN_ARTICLES }}
+        run: python articles.py publier
+      - name: Garder l'historique
+        run: |
+          git add -A data
+          git commit -m "Article de la semaine publié"
+          git push
